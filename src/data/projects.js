@@ -40,9 +40,9 @@ export const projects = [
   {
     id: 'geo-map',
     techs: ['JavaScript', 'Leaflet', 'OpenStreetMap'],
-    image: null, // TODO: add a screenshot of the interactive map
-    demoUrl: '', // TODO: add your live demo URL
-    githubUrl: '', // TODO: add your GitHub repo URL
+    image: '/images/geo-map.png',
+    demoUrl: 'https://dakirbadr49-coder.github.io/geo-loc-/exGeo01carte.html',
+    githubUrl: 'https://github.com/dakirbadr49-coder/geo-loc-',
   },
   {
     id: 'guestbook',
