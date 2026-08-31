@@ -55,6 +55,16 @@ export default {
         description:
           "Een oefen-landingspagina voor een fictieve webstudio, gemaakt om conversiegericht ontwerp te oefenen: modulaire prijzen, een Stripe-afrekenflow, en een overzichtelijke one-pagelay-out.",
       },
+      {
+        title: "Interactieve kaart — geolocatie",
+        description:
+          "Een interactieve kaart met gelokaliseerde plaatsen en klikbare markers, samen met een dynamische tabel van coördinaten (lengte-/breedtegraad, in decimale graden en DMS). Gebouwd met de Leaflet API en OpenStreetMap-tegels.",
+      },
+      {
+        title: "Dynamisch gastenboek",
+        description:
+          "Een PHP-formulier dat berichten van bezoekers opslaat in een MySQL-database, met een responsieve interface, online geplaatst.",
+      },
     ],
   },
   skills: {
