@@ -1,0 +1,43 @@
+.contact-inner {
+  display: flex;
+  flex-direction: column;
+}
+
+.contact-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  max-width: 800px;
+}
+
+.contact-link {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1.25rem 1.4rem;
+  text-decoration: none;
+  color: var(--color-text);
+  transition: border-color 0.15s ease, transform 0.1s ease;
+}
+
+.contact-link:hover {
+  border-color: var(--color-accent);
+}
+
+.contact-link.is-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.contact-link-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.contact-link-value {
+  font-size: 0.98rem;
+  word-break: break-word;
+}

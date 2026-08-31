@@ -1,0 +1,66 @@
+.education-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 2.5rem;
+  align-items: start;
+}
+
+.education-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.education-item {
+  padding: 1.5rem;
+  border-left: 3px solid var(--color-accent);
+}
+
+.education-period {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-accent);
+  letter-spacing: 0.03em;
+  margin-bottom: 0.4rem;
+}
+
+.education-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.education-place {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  margin-top: 0.15rem;
+}
+
+.education-description {
+  margin-top: 0.6rem;
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+}
+
+.education-map-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.education-map-heading {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.education-map-caption {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+@media (max-width: 860px) {
+  .education-grid {
+    grid-template-columns: 1fr;
+  }
+}

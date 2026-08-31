@@ -1,0 +1,17 @@
+export const skills = [
+  { name: 'HTML5' },
+  { name: 'CSS3' },
+  { name: 'JavaScript' },
+  { name: 'React' },
+  { name: 'Node.js' },
+  { name: 'jQuery' },
+  { name: 'Bootstrap' },
+  { name: 'PHP' },
+  { name: 'Python', qualifierKey: 'basics' },
+  { name: 'SQL / MariaDB' },
+  { name: 'Git / GitHub' },
+  { name: 'Linux', qualifierKey: 'cli' },
+  { name: 'Neovim' },
+  { name: 'Figma' },
+  { name: 'SEO', qualifierKey: 'basics' },
+]

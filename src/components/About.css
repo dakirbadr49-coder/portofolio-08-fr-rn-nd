@@ -1,0 +1,35 @@
+.about-grid {
+  display: grid;
+  gap: 2rem;
+}
+
+.about-content {
+  max-width: 68ch;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  color: var(--color-text-muted);
+  font-size: 1.05rem;
+}
+
+.about-ai-card {
+  margin-top: 0.75rem;
+  padding: 1.5rem;
+  border-left: 3px solid var(--color-accent);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.about-ai-card .badge {
+  align-self: flex-start;
+}
+
+.about-ai-card h3 {
+  font-size: 1.05rem;
+  color: var(--color-text);
+}
+
+.about-ai-card p {
+  margin: 0;
+}
