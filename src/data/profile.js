@@ -4,6 +4,6 @@
  */
 export const profile = {
   email: 'dakirbadr49@gmail.com',
-  githubUrl: '', // TODO: add your GitHub profile URL
-  linkedinUrl: '', // TODO: add your LinkedIn profile URL
+  githubUrl: 'https://github.com/dakirbadr49-coder',
+  linkedinUrl: 'https://www.linkedin.com/in/badr-dakir-191a80307/',
 }
