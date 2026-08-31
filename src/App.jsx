@@ -1,5 +1,6 @@
 import { ThemeProvider } from './context/ThemeContext.jsx'
 import { LanguageProvider } from './context/LanguageContext.jsx'
+import Splash from './components/Splash.jsx'
 import Header from './components/Header.jsx'
 import Hero from './components/Hero.jsx'
 import About from './components/About.jsx'
@@ -13,6 +14,7 @@ export default function App() {
   return (
     <ThemeProvider>
       <LanguageProvider>
+        <Splash />
         <Header />
         <main>
           <Hero />

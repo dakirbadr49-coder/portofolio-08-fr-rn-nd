@@ -17,6 +17,7 @@
 }
 
 .header-logo {
+  position: relative;
   font-weight: 700;
   font-size: 1.15rem;
   text-decoration: none;
@@ -26,6 +27,21 @@
 
 .header-logo span {
   color: var(--color-accent);
+}
+
+.header-logo::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  width: 0;
+  height: 2px;
+  background-color: var(--color-accent);
+  transition: width 0.25s ease;
+}
+
+.header-logo:hover::after {
+  width: 100%;
 }
 
 .header-nav ul {

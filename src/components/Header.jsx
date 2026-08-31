@@ -42,7 +42,7 @@ export default function Header() {
     <header className="header">
       <div className="header-inner container">
         <a href="#hero" className="header-logo" onClick={closeMenu}>
-          Badr<span>.dev</span>
+          Dakir<span>.dev</span>
         </a>
 
         <nav className={`header-nav ${menuOpen ? 'is-open' : ''}`}>

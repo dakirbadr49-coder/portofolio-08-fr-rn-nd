@@ -36,19 +36,24 @@ export default {
     imagePlaceholder: "Screenshot volgt binnenkort",
     items: [
       {
-        title: "Interactieve kaart — geolocatie",
-        description:
-          "Een interactieve kaart met gelokaliseerde plaatsen en klikbare markers, samen met een dynamische tabel van coördinaten (lengte-/breedtegraad, in decimale graden en DMS). Gebouwd met de Leaflet API en OpenStreetMap-tegels.",
-      },
-      {
         title: "Persoonlijke portfolio",
         description:
           "Een ontwerp gemaakt in Figma, vervolgens omgezet in een volledig responsieve website met HTML, CSS en JavaScript, en online gezet via FTP.",
       },
       {
-        title: "Dynamisch gastenboek",
+        title: "Interactief 3D-zonnestelsel",
         description:
-          "Een PHP-formulier dat berichten van bezoekers opslaat in een MySQL-database, met een responsieve interface, online geplaatst.",
+          "Een volledig interactief zonnestelsel gebouwd met Three.js — de zon, alle 8 planeten plus Pluto, manen, een asteroïdengordel en een komeet, met handgemaakte procedurele texturen (geen externe afbeeldingen). Sleep om te draaien, scroll om te zoomen, en tik op een hemellichaam voor weetjes erover.",
+      },
+      {
+        title: "NEURAL_CITY — cyberpunk stad verkennen",
+        description:
+          "Een cyberpunk stad gegenereerd in Three.js waarbij elke wijk een programmeertaal of technologie voorstelt — meer dan 90 met de hand geplaatste gebouwen verdeeld over 4 zones, met een eerste-/derdepersoons wandelmodus en een sci-fi HUD om tussen sectoren te navigeren.",
+      },
+      {
+        title: "B Network — landingspagina voor een webstudio",
+        description:
+          "Een oefen-landingspagina voor een fictieve webstudio, gemaakt om conversiegericht ontwerp te oefenen: modulaire prijzen, een Stripe-afrekenflow, en een overzichtelijke one-pagelay-out.",
       },
     ],
   },

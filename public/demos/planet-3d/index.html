@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>🪐 Notre Système Solaire</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪐</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  :root{
+    --panel: rgba(10, 14, 36, 0.62);
+    --panel-strong: rgba(9, 13, 34, 0.85);
+    --line: rgba(150, 175, 255, 0.20);
+    --gold: #ffd075;
+    --blue: #8ab6ff;
+    --text: #f1f4ff;
+    --muted: #a9b3d6;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  body{
+    background:#04061a;
+    overflow:hidden;
+    font-family:'Nunito','Segoe UI',sans-serif;
+    user-select:none; -webkit-user-select:none;
+    touch-action:none;
+    color:var(--text);
+  }
+  #canvas{ display:block; position:fixed; inset:0; }
+
+  /* ── Écran de chargement ── */
+  #loader{
+    position:fixed; inset:0; z-index:100;
+    background:radial-gradient(ellipse at 50% 40%, #0b1134 0%, #030512 70%);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:22px;
+    transition:opacity .55s ease;
+  }
+  #loader.done{ opacity:0; pointer-events:none; }
+  .lo-orbit{ position:relative; width:96px; height:96px; }
+  .lo-sun{
+    position:absolute; top:50%; left:50%; width:20px; height:20px; margin:-10px 0 0 -10px;
+    border-radius:50%; background:var(--gold);
+    box-shadow:0 0 22px 6px rgba(255,208,117,.55);
+  }
+  .lo-p{ position:absolute; inset:0; animation:lo-spin 1.7s linear infinite; }
+  .lo-p::after{
+    content:''; position:absolute; top:0; left:50%; width:10px; height:10px; margin-left:-5px;
+    border-radius:50%; background:var(--blue); box-shadow:0 0 8px var(--blue);
+  }
+  .lo-p.two{ animation-duration:2.9s; }
+  .lo-p.two::after{ top:14px; width:7px; height:7px; background:#e0906a; box-shadow:0 0 8px #e0906a; }
+  @keyframes lo-spin{ to{ transform:rotate(360deg); } }
+  #loader p{ font-family:'Fredoka',sans-serif; font-weight:500; font-size:16px; color:var(--muted); letter-spacing:.04em; }
+
+  /* ── Titre ── */
+  #title{
+    position:fixed; top:10px; left:50%; transform:translateX(-50%);
+    text-align:center; pointer-events:none; z-index:10; white-space:nowrap;
+  }
+  #title h1{
+    font-family:'Fredoka',sans-serif; font-weight:600;
+    font-size:clamp(19px, 4.2vw, 32px);
+    text-shadow:0 0 22px rgba(255,208,117,.55), 0 2px 10px rgba(0,0,0,.6);
+    letter-spacing:.02em;
+  }
+  #subtitle{ font-size:12.5px; font-weight:600; color:var(--muted); margin-top:2px; }
+
+  /* ── Message d'aide ── */
+  #help{
+    position:fixed; top:72px; left:50%; transform:translateX(-50%);
+    background:var(--panel); backdrop-filter:blur(10px);
+    border:1px solid var(--line); border-radius:14px;
+    padding:9px 16px; font-size:13px; font-weight:600;
+    z-index:10; text-align:center; max-width:92vw;
+    transition:opacity .6s; pointer-events:none; line-height:1.55;
+  }
+  #help small{ color:var(--muted); font-size:11.5px; }
+  #help.hidden{ opacity:0; }
+
+  /* ── Fiche d'info ── */
+  #info-card{
+    position:fixed; bottom:132px; left:50%; transform:translateX(-50%) scale(0);
+    width:min(470px, 94vw);
+    background:var(--panel-strong); backdrop-filter:blur(14px) saturate(1.2);
+    border:1px solid var(--line); border-radius:20px;
+    padding:16px 20px 15px;
+    z-index:20; transform-origin:50% 100%;
+    transition:transform .32s cubic-bezier(.34,1.56,.64,1);
+    box-shadow:0 14px 50px rgba(0,0,0,.65);
+    max-height:min(46vh, 340px); overflow-y:auto;
+  }
+  #info-card.visible{ transform:translateX(-50%) scale(1); }
+  #card-tag{
+    font-family:'Fredoka',sans-serif; font-size:11px; font-weight:600;
+    letter-spacing:.14em; text-transform:uppercase; color:var(--gold);
+  }
+  #info-card h2{ font-family:'Fredoka',sans-serif; font-weight:600; font-size:23px; margin:2px 0 4px; }
+  #card-stats{ display:flex; flex-wrap:wrap; gap:6px; margin:8px 0 2px; }
+  .stat{
+    background:rgba(138,182,255,.10); border:1px solid rgba(138,182,255,.28);
+    border-radius:10px; padding:4px 10px; font-size:12.5px; font-weight:800;
+  }
+  .fact-label{
+    margin-top:11px; font-family:'Fredoka',sans-serif; font-size:11px; font-weight:600;
+    letter-spacing:.14em; text-transform:uppercase; color:var(--blue);
+  }
+  #card-fact{ font-size:14.5px; font-weight:600; line-height:1.55; margin-top:3px; }
+  #close-card{
+    position:absolute; top:9px; right:12px; background:none; border:none;
+    color:var(--gold); font-size:21px; cursor:pointer; font-family:inherit; line-height:1;
+  }
+
+  /* ── Dock des astres ── */
+  #dock{
+    position:fixed; bottom:66px; left:50%; transform:translateX(-50%);
+    display:flex; gap:8px; z-index:15;
+    max-width:96vw; overflow-x:auto; padding:6px 26px;
+    scrollbar-width:none;
+    -webkit-mask-image:linear-gradient(90deg, transparent, #000 22px, #000 calc(100% - 22px), transparent);
+            mask-image:linear-gradient(90deg, transparent, #000 22px, #000 calc(100% - 22px), transparent);
+  }
+  #dock::-webkit-scrollbar{ display:none; }
+  .chip{
+    flex:0 0 auto; display:flex; align-items:center; gap:6px;
+    background:var(--panel); backdrop-filter:blur(8px);
+    border:1px solid var(--line); border-radius:999px;
+    color:var(--text); font-family:'Nunito',sans-serif; font-size:13px; font-weight:800;
+    padding:7px 13px; cursor:pointer;
+    transition:transform .15s, border-color .2s, box-shadow .2s;
+  }
+  .chip:active{ transform:scale(.93); }
+  .chip.active{ border-color:var(--gold); box-shadow:0 0 16px rgba(255,208,117,.35); }
+
+  /* ── Barre de boutons ── */
+  #controls{
+    position:fixed; bottom:12px; left:50%; transform:translateX(-50%);
+    display:flex; gap:8px; z-index:15; flex-wrap:wrap; justify-content:center;
+    max-width:96vw;
+  }
+  .btn{
+    background:var(--panel); backdrop-filter:blur(8px);
+    border:1px solid var(--line); color:var(--text);
+    font-family:'Nunito',sans-serif; font-size:13px; font-weight:800;
+    padding:9px 14px; border-radius:999px; cursor:pointer;
+    box-shadow:0 4px 14px rgba(0,0,0,.4);
+    transition:transform .15s, border-color .2s;
+  }
+  .btn:active{ transform:scale(.92); }
+  .btn.on{ border-color:var(--gold); }
+
+  #credit{
+    position:fixed; bottom:13px; right:14px; z-index:9;
+    font-size:11px; font-weight:600; color:var(--muted); opacity:.75; pointer-events:none;
+  }
+
+  .btn:focus-visible, .chip:focus-visible, #close-card:focus-visible{
+    outline:2px solid var(--gold); outline-offset:2px;
+  }
+  @media (max-width:560px){ #credit{ display:none; } }
+  @media (max-height:560px){ #help, #subtitle{ display:none; } }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:.01ms !important; transition-duration:.01ms !important; }
+  }
+</style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+
+<div id="loader">
+  <div class="lo-orbit">
+    <div class="lo-sun"></div>
+    <div class="lo-p"></div>
+    <div class="lo-p two"></div>
+  </div>
+  <p>Fabrication de l'univers…</p>
+</div>
+
+<div id="title">
+  <h1>🌞 Notre Système Solaire</h1>
+  <div id="subtitle">Touche un astre pour l'explorer</div>
+</div>
+
+<div id="help">
+  👆 Touche une planète pour la découvrir · ✋ glisse pour tourner · 🤏 pince ou molette pour zoomer<br>
+  <small>Tailles et distances réduites pour tout voir 😉</small>
+</div>
+
+<div id="info-card">
+  <button id="close-card" aria-label="Fermer">✖</button>
+  <div id="card-tag"></div>
+  <h2 id="card-title">Planète</h2>
+  <div id="card-stats"></div>
+  <div class="fact-label">Le savais-tu ?</div>
+  <div id="card-fact"></div>
+</div>
+
+<div id="dock"></div>
+
+<div id="controls">
+  <button class="btn" id="btn-pause">⏸ Pause</button>
+  <button class="btn" id="btn-speed">🐢 Vitesse ×1</button>
+  <button class="btn on" id="btn-orbits">🔵 Orbites</button>
+  <button class="btn on" id="btn-labels">🏷️ Noms</button>
+  <button class="btn" id="btn-tour">✨ Visite guidée</button>
+  <button class="btn" id="btn-home">🏠 Vue globale</button>
+</div>
+
+<div id="credit">Créé par Badr · Three.js</div>
+
+<script>
+/* ============================================================
+   NOTRE SYSTÈME SOLAIRE — version « réaliste »
+   100 % procédural (aucune image externe) — Three.js r128
+   ============================================================ */
+
+/* ───────────────────────── 1. DONNÉES ─────────────────────────
+   Tailles et distances PAS à l'échelle réelle (sinon on ne verrait
+   rien !) mais les proportions restent parlantes.
+   tilt = inclinaison de l'axe (radians), spin = vitesse de rotation,
+   incl = inclinaison de l'orbite (Pluton). */
+const PLANETS = [
+  { id:'mercure', name:'Mercure', emoji:'🪨', size:0.9, dist:14, speed:4.15, spin:0.02,  tilt:0.01, tex:'mercure', dot:'#b5a89b',
+    stats:['📏 4 880 km','☀️ 58 millions de km','📅 Année : 88 jours','🌙 0 lune','🌡️ −180 °C à +430 °C'],
+    fact:"La plus petite planète, toute proche du Soleil. Sa surface est couverte de cratères, comme la Lune — et une seule journée là-bas dure 59 jours terrestres !" },
+  { id:'venus', name:'Vénus', emoji:'🔥', size:1.4, dist:19, speed:1.62, spin:-0.01, tilt:0.05, tex:'venus', dot:'#e6c37a',
+    stats:['📏 12 104 km','☀️ 108 millions de km','📅 Année : 225 jours','🌙 0 lune','🌡️ +465 °C — la plus chaude !'],
+    fact:"Sous ses épais nuages jaunes, Vénus est un vrai four : il y fait encore plus chaud que sur Mercure ! Et elle tourne à l'envers : le Soleil s'y lève à l'ouest." },
+  { id:'terre', name:'Terre', emoji:'🌍', size:1.5, dist:25, speed:1.0, spin:0.35, tilt:0.41, tex:'terre', dot:'#3f7fd6',
+    stats:['📏 12 742 km','☀️ 150 millions de km','📅 Année : 365 jours','🌙 1 lune','💧 71 % d\u2019océans'],
+    fact:"Notre maison ! La seule planète connue où il y a de la vie. Regarde bien : on voit les nuages tourner au-dessus des continents et des océans bleus." },
+  { id:'mars', name:'Mars', emoji:'🔴', size:1.1, dist:32, speed:0.53, spin:0.34, tilt:0.44, tex:'mars', dot:'#d1603d',
+    stats:['📏 6 779 km','☀️ 228 millions de km','📅 Année : 687 jours','🌙 2 lunes','🌡️ −63 °C en moyenne'],
+    fact:"La planète rouge, couleur rouille ! Elle abrite le plus grand volcan du système solaire, Olympus Mons, 3 fois plus haut que l'Everest. Des robots l'explorent en ce moment." },
+  { id:'jupiter', name:'Jupiter', emoji:'🟠', size:4.2, dist:45, speed:0.084, spin:0.8, tilt:0.05, tex:'jupiter', dot:'#d9a066',
+    stats:['📏 139 820 km','☀️ 778 millions de km','📅 Année : 12 ans','🌙 95 lunes','🕐 Jour : 10 h — record !'],
+    fact:"La géante ! Toutes les autres planètes tiendraient dedans. Sa Grande Tache Rouge est une tempête plus grande que la Terre qui tourbillonne depuis plus de 300 ans. Zoome pour voir ses 4 plus grosses lunes !" },
+  { id:'saturne', name:'Saturne', emoji:'🪐', size:3.6, dist:58, speed:0.034, spin:0.75, tilt:0.47, tex:'saturne', ring:'saturne', dot:'#e0cda8',
+    stats:['📏 116 460 km','☀️ 1,4 milliard de km','📅 Année : 29 ans','🌙 146 lunes','🎈 Flotterait sur l\u2019eau !'],
+    fact:"La star du système solaire ✨ Ses anneaux sont faits de milliards de morceaux de glace et de roche : certains petits comme des grains de sable, d'autres gros comme des maisons." },
+  { id:'uranus', name:'Uranus', emoji:'🧊', size:2.4, dist:70, speed:0.012, spin:0.45, tilt:1.71, tex:'uranus', ring:'uranus', dot:'#9fd8e0',
+    stats:['📏 50 724 km','☀️ 2,9 milliards de km','📅 Année : 84 ans','🌙 28 lunes','🥶 −195 °C'],
+    fact:"Une géante de glace bleu pâle… complètement couchée sur le côté ! Elle roule autour du Soleil comme une bille. Regarde son axe penché et son fin anneau." },
+  { id:'neptune', name:'Neptune', emoji:'💙', size:2.3, dist:80, speed:0.006, spin:0.5, tilt:0.49, tex:'neptune', dot:'#4666e0',
+    stats:['📏 49 244 km','☀️ 4,5 milliards de km','📅 Année : 165 ans','🌙 16 lunes','💨 Vents à 2 000 km/h'],
+    fact:"La plus lointaine des planètes, d'un bleu profond. Ses vents sont les plus rapides du système solaire — plus vite qu'un avion de chasse !" },
+  { id:'pluton', name:'Pluton', emoji:'⚪', size:0.55, dist:92, speed:0.0042, spin:-0.06, tilt:2.1, incl:0.30, tex:'pluton', dot:'#c9b8a4', tag:'Planète naine',
+    stats:['📏 2 377 km — mini !','☀️ 5,9 milliards de km','📅 Année : 248 ans','🌙 5 lunes','🧊 −230 °C'],
+    fact:"Pluton était la 9ᵉ planète… jusqu'en 2006 ! C'est maintenant une planète naine. On voit un grand cœur clair sur sa surface, photographié par la sonde New Horizons. Son orbite penchée l'emmène dans la ceinture de Kuiper, tout au bord du système solaire." },
+];
+
+const SUN_INFO = { name:'Le Soleil', emoji:'🌞', tag:'Notre étoile',
+  stats:['📏 1,39 million de km','⭐ C\u2019est une étoile !','🔥 15 millions de °C au cœur','⏱ Sa lumière : 8 min jusqu\u2019à nous'],
+  fact:"Le Soleil n'est pas une planète : c'est notre étoile, une boule géante de gaz brûlant. Il est si gros qu'on pourrait y ranger plus d'un million de Terres !" };
+
+/* Les lunes : la nôtre + les 4 grandes lunes de Jupiter (galiléennes) */
+const MOONS = [
+  { id:'lune', parent:'terre', name:'La Lune', emoji:'🌙', size:0.40, dist:2.8, speed:2.2, kind:'lune', tag:'Notre satellite',
+    stats:['📏 3 474 km','🌍 À 384 400 km de nous','👣 Visitée en 1969'],
+    fact:"Notre fidèle compagne ! Elle nous montre toujours la même face et provoque les marées des océans. 12 astronautes ont marché dessus." },
+  { id:'io', parent:'jupiter', name:'Io', emoji:'🌋', size:0.30, dist:5.7, speed:3.4, kind:'io', tag:'Lune de Jupiter',
+    stats:['📏 3 643 km','🌋 Plus de 400 volcans'],
+    fact:"Io est le monde le plus volcanique du système solaire : sa surface jaune-orange est couverte de lave et de soufre !" },
+  { id:'europe', parent:'jupiter', name:'Europe', emoji:'❄️', size:0.27, dist:6.9, speed:2.5, kind:'europe', tag:'Lune de Jupiter',
+    stats:['📏 3 122 km','🌊 Un océan caché'],
+    fact:"Sous sa coquille de glace craquelée, Europe cache un immense océan d'eau liquide. Y a-t-il de la vie dedans ? Les scientifiques rêvent d'aller voir !" },
+  { id:'ganymede', parent:'jupiter', name:'Ganymède', emoji:'🪨', size:0.42, dist:8.5, speed:1.8, kind:'ganymede', tag:'Lune de Jupiter',
+    stats:['📏 5 268 km','👑 La plus grande lune'],
+    fact:"Ganymède est la plus grande lune du système solaire — encore plus grande que la planète Mercure !" },
+  { id:'callisto', parent:'jupiter', name:'Callisto', emoji:'🌑', size:0.38, dist:10.3, speed:1.15, kind:'callisto', tag:'Lune de Jupiter',
+    stats:['📏 4 821 km','🕳 Pleine de cratères'],
+    fact:"Callisto est l'un des mondes les plus cabossés : sa vieille surface garde les traces de milliards d'années d'impacts." },
+];
+
+const COMET_INFO = { name:'Comète', emoji:'☄️', tag:'Visiteuse glacée',
+  stats:['🧊 Boule de glace et de poussière','☀️ Sa queue fuit le Soleil','🏃 Accélère près du Soleil'],
+  fact:"Quand une comète s'approche du Soleil, sa glace s'évapore et forme une magnifique queue… qui pointe toujours à l'opposé du Soleil ! Suis-la : elle fonce quand elle passe près de lui." };
+
+const BELT_INFO = { name:'Ceinture d\u2019astéroïdes', emoji:'💫', tag:'Entre Mars et Jupiter',
+  stats:['🪨 Des millions de rochers','👑 Le plus gros : Cérès','⚖️ Moins lourds que la Lune, tous ensemble !'],
+  fact:"Entre Mars et Jupiter tournent des millions de rochers : les astéroïdes. Ce sont des restes de la construction du système solaire, il y a 4,6 milliards d'années." };
+
+/* ───────────────────── 2. MOTEUR & CAMÉRA ───────────────────── */
+const canvas = document.getElementById('canvas');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+const ANISO = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1200);
+
+/* Caméra orbitale maison : angles + distance -> position.
+   distGoal permet un zoom LISSÉ (interpolé à chaque frame). */
+const ORIGIN = new THREE.Vector3(0, 0, 0);
+const cam = { theta: 0.65, phi: 1.03, dist: 110, distGoal: 110, target: new THREE.Vector3() };
+function applyCamera() {
+  const sp = Math.sin(cam.phi), cp = Math.cos(cam.phi);
+  camera.position.set(
+    cam.target.x + cam.dist * sp * Math.cos(cam.theta),
+    cam.target.y + cam.dist * cp,
+    cam.target.z + cam.dist * sp * Math.sin(cam.theta)
+  );
+  camera.lookAt(cam.target);
+}
+
+/* Lumières : le Soleil éclaire depuis le centre, plus un léger
+   remplissage bleu nuit pour que la face cachée reste lisible. */
+scene.add(new THREE.AmbientLight(0x1b2340, 1.1));
+const sunLight = new THREE.PointLight(0xfff2d8, 2.2, 0);
+scene.add(sunLight);
+
+/* ─────────────── 3. BRUIT & FABRIQUE DE TEXTURES ───────────────
+   Tout est dessiné en JavaScript : bruit fractal (fBm) + palettes.
+   Le bruit "boucle" horizontalement -> aucune couture sur la sphère. */
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+/* fBm : plusieurs couches de bruit lissé, de plus en plus fines. */
+function makeFbm(seed, octaves, fx, fy) {
+  const rnd = mulberry32(seed);
+  const oct = [];
+  let gx = Math.max(2, fx), gy = Math.max(2, fy);
+  for (let o = 0; o < octaves; o++) {
+    const g = new Float32Array(gx * gy);
+    for (let i = 0; i < g.length; i++) g[i] = rnd();
+    oct.push({ g, gx, gy });
+    gx *= 2; gy *= 2;
+  }
+  return function (u, v) {
+    u -= Math.floor(u);
+    v = Math.min(1, Math.max(0, v));
+    let sum = 0, amp = 0.5;
+    for (let o = 0; o < oct.length; o++) {
+      const L = oct[o];
+      const x = u * L.gx, y = v * (L.gy - 1);
+      let x0 = Math.floor(x), y0 = Math.floor(y);
+      const tx = x - x0, ty = y - y0;
+      const x1 = (x0 + 1) % L.gx; x0 %= L.gx;
+      const y1 = Math.min(L.gy - 1, y0 + 1);
+      const sx = tx * tx * (3 - 2 * tx), sy = ty * ty * (3 - 2 * ty);
+      const a = L.g[y0 * L.gx + x0], b = L.g[y0 * L.gx + x1];
+      const c = L.g[y1 * L.gx + x0], d = L.g[y1 * L.gx + x1];
+      const top = a + (b - a) * sx, bot = c + (d - c) * sx;
+      sum += (top + (bot - top) * sy - 0.5) * amp * 2;
+      amp *= 0.5;
+    }
+    return sum * 0.5 + 0.5;
+  };
+}
+
+/* Palette : liste d'étapes [t, r, g, b] -> couleur interpolée. */
+function ramp(stops) {
+  return function (t) {
+    t = Math.min(1, Math.max(0, t));
+    let i = 1;
+    while (i < stops.length - 1 && stops[i][0] < t) i++;
+    const a = stops[i - 1], b = stops[i];
+    const k = (t - a[0]) / Math.max(1e-6, b[0] - a[0]);
+    return [a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k, a[3] + (b[3] - a[3]) * k];
+  };
+}
+function smooth(a, b, x) { x = Math.min(1, Math.max(0, (x - a) / (b - a))); return x * x * (3 - 2 * x); }
+function wrapD(d) { return d - Math.round(d); } // plus court chemin sur une sphère (couture)
+function clamp01(x) { return Math.min(1, Math.max(0, x)); }
+
+/* Remplit un canvas pixel par pixel : fill(u, v, px) écrit dans px. */
+function paintPixels(w, h, fill) {
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const ctx = c.getContext('2d');
+  const img = ctx.createImageData(w, h);
+  const d = img.data, px = [0, 0, 0, 255];
+  for (let y = 0; y < h; y++) {
+    const v = y / (h - 1);
+    for (let x = 0; x < w; x++) {
+      px[3] = 255;
+      fill(x / w, v, px);
+      const i = (y * w + x) * 4;
+      d[i] = px[0]; d[i + 1] = px[1]; d[i + 2] = px[2]; d[i + 3] = px[3];
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  return { c, ctx };
+}
+function toTex(c) { const t = new THREE.CanvasTexture(c); t.anisotropy = ANISO; return t; }
+
+/* Cratères : dégradé sombre + rebord clair (dessinés 3 fois pour
+   que ceux du bord gauche continuent sur le bord droit). */
+function drawCraters(ctx, w, h, rnd, count, minR, maxR, strength) {
+  for (let i = 0; i < count; i++) {
+    const cx = rnd() * w, cy = h * (0.06 + rnd() * 0.88);
+    const r = minR + rnd() * rnd() * (maxR - minR);
+    for (let k = -1; k <= 1; k++) {
+      const g = ctx.createRadialGradient(cx + k * w, cy, r * 0.1, cx + k * w, cy, r);
+      g.addColorStop(0, 'rgba(0,0,0,' + (0.30 * strength) + ')');
+      g.addColorStop(0.72, 'rgba(0,0,0,' + (0.16 * strength) + ')');
+      g.addColorStop(0.80, 'rgba(255,255,235,' + (0.20 * strength) + ')');
+      g.addColorStop(1, 'rgba(255,255,235,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(cx + k * w, cy, r, 0, 6.2832);
+      ctx.fill();
+    }
+  }
+}
+
+/* ── Mondes rocheux ── */
+function texMercure() {
+  const rnd = mulberry32(11);
+  const f = makeFbm(11, 5, 8, 4);
+  const pal = ramp([[0,74,66,60],[0.5,128,118,108],[0.8,168,158,146],[1,205,196,184]]);
+  const res = paintPixels(512, 256, function (u, v, px) {
+    const col = pal(clamp01((f(u, v) - 0.47) * 1.7 + 0.5));
+    px[0]=col[0]; px[1]=col[1]; px[2]=col[2];
+  });
+  drawCraters(res.ctx, 512, 256, rnd, 150, 3, 16, 1);
+  return toTex(res.c);
+}
+
+function texLune() {
+  const rnd = mulberry32(13);
+  const f = makeFbm(13, 5, 8, 4);
+  const pal = ramp([[0,92,92,96],[0.5,150,150,154],[0.8,190,190,192],[1,222,222,224]]);
+  const maria = [[0.22,0.38,0.14,0.11],[0.44,0.32,0.10,0.09],[0.60,0.45,0.16,0.12],[0.80,0.36,0.09,0.08]];
+  const res = paintPixels(512, 256, function (u, v, px) {
+    const col = pal(clamp01((f(u, v) - 0.47) * 1.7 + 0.5));
+    let dark = 0;
+    for (let i = 0; i < maria.length; i++) {
+      const m = maria[i];
+      const dx = wrapD(u - m[0]) / m[2], dy = (v - m[1]) / m[3];
+      dark = Math.max(dark, 1 - smooth(0.6, 1.1, Math.sqrt(dx*dx + dy*dy)));
+    }
+    const k = 1 - dark * 0.45;
+    px[0]=col[0]*k; px[1]=col[1]*k; px[2]=col[2]*k;
+  });
+  drawCraters(res.ctx, 512, 256, rnd, 220, 2, 13, 1.1);
+  return toTex(res.c);
+}
+
+function texMars() {
+  const rnd = mulberry32(17);
+  const f = makeFbm(17, 5, 6, 3);
+  const fd = makeFbm(18, 4, 20, 10);
+  const pal = ramp([[0,84,32,20],[0.35,142,62,34],[0.65,190,102,58],[0.85,214,140,92],[1,232,178,130]]);
+  const maria = [[0.30,0.55,0.20,0.13],[0.72,0.42,0.16,0.11]];
+  const res = paintPixels(512, 256, function (u, v, px) {
+    const n = f(u,v)*0.75 + fd(u,v)*0.25;
+    const col = pal(clamp01((n - 0.47) * 1.6 + 0.5));
+    let dark = 0;
+    for (let i=0;i<maria.length;i++){
+      const m=maria[i];
+      const dx=wrapD(u-m[0])/m[2], dy=(v-m[1])/m[3];
+      dark=Math.max(dark, 1-smooth(0.55,1.1,Math.sqrt(dx*dx+dy*dy)));
+    }
+    let r=col[0]*(1-dark*0.4), g=col[1]*(1-dark*0.4), b=col[2]*(1-dark*0.4);
+    const ice = smooth(0.88,0.93, Math.abs(2*v-1) + (fd(u,v)-0.5)*0.08);
+    px[0]=r+(236-r)*ice; px[1]=g+(232-g)*ice; px[2]=b+(228-b)*ice;
+  });
+  // Valles Marineris, le grand canyon de Mars
+  const ctx = res.ctx;
+  ctx.strokeStyle='rgba(70,25,15,0.55)'; ctx.lineWidth=5; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(90,138); ctx.quadraticCurveTo(160,130,225,140); ctx.stroke();
+  ctx.strokeStyle='rgba(160,75,45,0.4)'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(95,137); ctx.quadraticCurveTo(160,129,220,139); ctx.stroke();
+  drawCraters(ctx,512,256,rnd,60,2,9,0.7);
+  return toTex(res.c);
+}
+
+function texPluton() {
+  const rnd = mulberry32(19);
+  const f = makeFbm(19,5,7,4), fd = makeFbm(20,4,18,9);
+  const pal = ramp([[0,96,72,58],[0.5,150,118,92],[0.8,196,168,138],[1,224,206,182]]);
+  const res = paintPixels(512, 256, function (u, v, px) {
+    const col = pal(clamp01((f(u, v) - 0.47) * 1.7 + 0.5));
+    // le fameux "coeur" clair (Tombaugh Regio)
+    const dx = wrapD(u-0.55)/0.16, dy = (v-0.56)/0.13;
+    const t = Math.sqrt(dx*dx+dy*dy) + (fd(u,v)-0.5)*0.35;
+    const heart = 1 - smooth(0.7,1.05,t);
+    // tache sombre le long de l'equateur
+    const dx2 = wrapD(u-0.18)/0.14, dy2 = (v-0.52)/0.08;
+    const dark = (1 - smooth(0.5,1.1,Math.sqrt(dx2*dx2+dy2*dy2))) * 0.45;
+    const r=col[0]*(1-dark), g=col[1]*(1-dark), b=col[2]*(1-dark);
+    px[0]=r+(240-r)*heart; px[1]=g+(230-g)*heart; px[2]=b+(212-b)*heart;
+  });
+  drawCraters(res.ctx,512,256,rnd,25,2,7,0.5);
+  return toTex(res.c);
+}
+
+function texVenus() {
+  const f = makeFbm(21,5,4,20), fw = makeFbm(22,4,6,3);
+  const pal = ramp([[0,158,120,60],[0.4,210,170,96],[0.75,238,214,150],[1,252,244,208]]);
+  const res = paintPixels(512, 256, function (u, v, px) {
+    const n = f(u + (fw(u,v)-0.5)*0.22, v);
+    const col = pal(clamp01((n - 0.47) * 1.6 + 0.5));
+    px[0]=col[0]; px[1]=col[1]; px[2]=col[2];
+  });
+  return toTex(res.c);
+}
+
+/* ── Géantes gazeuses : bandes horizontales turbulentes ── */
+function bandLut(rnd, palette) {
+  const L = 512, lut = new Float32Array(L*3);
+  let y = 0, pi = 0;
+  while (y < L) {
+    const h = Math.max(8, Math.floor((0.025 + rnd()*0.085) * L));
+    const col = palette[pi % palette.length]; pi++;
+    const jit = 0.92 + rnd()*0.16;
+    for (let k = 0; k < h && y < L; k++, y++) {
+      lut[y*3]=col[0]*jit; lut[y*3+1]=col[1]*jit; lut[y*3+2]=col[2]*jit;
+    }
+  }
+  for (let pass = 0; pass < 2; pass++) {   // flou vertical -> transitions douces
+    const src = lut.slice();
+    for (let yy = 0; yy < L; yy++) for (let ch = 0; ch < 3; ch++) {
+      let s = 0, n = 0;
+      for (let k = -4; k <= 4; k++) { const j = yy+k; if (j>=0 && j<L) { s += src[j*3+ch]; n++; } }
+      lut[yy*3+ch] = s/n;
+    }
+  }
+  return lut;
+}
+
+function texGeante(seed, palette, opts) {
+  const rnd = mulberry32(seed);
+  const lut = bandLut(rnd, palette);
+  const fw = makeFbm(seed+1,4,7,3), ff = makeFbm(seed+2,4,40,20);
+  const spot = opts.spot;
+  const res = paintPixels(1024, 512, function (u, v, px) {
+    const yy = clamp01(v + (fw(u,v)-0.5)*opts.warp);   // les bandes ondulent
+    const i3 = ((yy*511)|0)*3;
+    const m = 0.93 + (ff(u,v)-0.5)*opts.fine;          // grain fin
+    let r = lut[i3]*m, g = lut[i3+1]*m, b = lut[i3+2]*m;
+    if (spot) {                                        // Grande Tache Rouge
+      const dx = wrapD(u-spot.u)/spot.rx, dy = (v-spot.v)/spot.ry;
+      const q = dx*dx + dy*dy;
+      if (q < 1.3) {
+        const sq = Math.sqrt(q);
+        const t = clamp01(sq + (ff(u*2,v*2)-0.5)*0.25);
+        const sc = spot.pal(t);
+        const a = 1 - smooth(0.78, 1.08, sq);
+        r += (sc[0]-r)*a; g += (sc[1]-g)*a; b += (sc[2]-b)*a;
+      }
+    }
+    px[0]=r; px[1]=g; px[2]=b;
+  });
+  return toTex(res.c);
+}
+
+/* ── Géantes de glace ── */
+function texUranus() {
+  const f = makeFbm(25,4,6,3);
+  const res = paintPixels(512, 256, function (u, v, px) {
+    const l = 0.95 + (f(u,v)-0.5)*0.08 + Math.sin(v*Math.PI*7)*0.02;
+    px[0]=141*l; px[1]=211*l; px[2]=222*l;
+  });
+  return toTex(res.c);
+}
+
+function texNeptune() {
+  const f = makeFbm(27,5,6,3), ff = makeFbm(28,4,30,15);
+  const spotPal = ramp([[0,14,28,90],[0.55,24,48,124],[0.85,70,110,190],[1,150,190,240]]);
+  const res = paintPixels(512, 256, function (u, v, px) {
+    const l = 0.92 + (f(u,v)-0.5)*0.22 + Math.sin(v*Math.PI*9)*0.045;
+    let r=44*l, g=86*l, b=182*l;
+    const dx = wrapD(u-0.32)/0.10, dy = (v-0.42)/0.055;  // la Grande Tache Sombre
+    const q = dx*dx + dy*dy;
+    if (q < 1.3) {
+      const sq = Math.sqrt(q);
+      const t = clamp01(sq + (ff(u*2,v)-0.5)*0.2);
+      const sc = spotPal(t);
+      const a = 1 - smooth(0.75, 1.1, sq);
+      r += (sc[0]-r)*a; g += (sc[1]-g)*a; b += (sc[2]-b)*a;
+    }
+    px[0]=r; px[1]=g; px[2]=b;
+  });
+  const ctx = res.ctx;   // fines trainées de nuages blancs
+  ctx.strokeStyle='rgba(235,242,255,0.35)'; ctx.lineCap='round'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(120,96); ctx.quadraticCurveTo(200,90,300,98); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(340,130); ctx.quadraticCurveTo(410,124,470,132); ctx.stroke();
+  ctx.lineWidth=1.4;
+  ctx.beginPath(); ctx.moveTo(60,150); ctx.quadraticCurveTo(120,146,180,152); ctx.stroke();
+  return toTex(res.c);
+}
+
+/* ── La Terre : continents, océans, calottes + carte de reflets ── */
+function texTerre() {
+  const fL = makeFbm(31,5,6,3), fD = makeFbm(32,5,24,12), fC = makeFbm(33,4,10,5);
+  const oceanPal = ramp([[0,44,110,178],[0.45,20,66,132],[1,8,32,84]]);
+  const landPal  = ramp([[0,52,116,56],[0.35,92,142,64],[0.6,152,132,82],[0.82,120,92,62],[1,236,236,232]]);
+  const W = 1024, H = 512;
+  const spec = document.createElement('canvas'); spec.width = W; spec.height = H;
+  const sctx = spec.getContext('2d');
+  const simg = sctx.createImageData(W, H), sd = simg.data;
+  const res = paintPixels(W, H, function (u, v, px) {
+    const n = fL(u,v)*0.75 + fD(u,v)*0.25;
+    const lat = Math.abs(2*v - 1);
+    let r, g, b, s;
+    if (n > 0.545) {                                  // terre ferme
+      if (n < 0.558) { r=196; g=180; b=142; }         // plages
+      else {
+        const h = (n - 0.545) / 0.455;
+        const col = landPal(clamp01(h*0.75 + (fC(u,v)-0.5)*0.35));
+        r=col[0]; g=col[1]; b=col[2];
+      }
+      s = 26;                                         // la terre reflète peu
+    } else {                                          // océan
+      const col = oceanPal(clamp01((0.545-n)/0.4));
+      r=col[0]; g=col[1]; b=col[2];
+      s = 255;                                        // l'eau brille au soleil
+    }
+    const ice = smooth(0.86, 0.94, lat + (fD(u,v)-0.5)*0.10);   // calottes polaires
+    r += (238-r)*ice; g += (242-g)*ice; b += (248-b)*ice; s += (90-s)*ice;
+    px[0]=r; px[1]=g; px[2]=b;
+    const x = Math.round(u*W) % W, y = Math.min(H-1, Math.round(v*(H-1)));
+    const i = (y*W + x) * 4;
+    sd[i]=s; sd[i+1]=s; sd[i+2]=s; sd[i+3]=255;
+  });
+  sctx.putImageData(simg, 0, 0);
+  return { map: toTex(res.c), spec: toTex(spec) };
+}
+
+function texNuages() {
+  const f = makeFbm(35,5,8,4), fw = makeFbm(36,4,14,7);
+  const res = paintPixels(1024, 512, function (u, v, px) {
+    const n = f(u + (fw(u,v)-0.5)*0.15, v);
+    px[0]=255; px[1]=255; px[2]=255;
+    px[3] = smooth(0.55, 0.78, n) * 235;
+  });
+  return toTex(res.c);
+}
+
+/* Halo d'atmosphère : brille sur le pourtour de la planète */
+function atmoMaterial(hex, power) {
+  return new THREE.ShaderMaterial({
+    uniforms: { c: { value: new THREE.Color(hex) }, p: { value: power } },
+    vertexShader: 'varying vec3 vN; void main(){ vN = normalize(normalMatrix * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: 'uniform vec3 c; uniform float p; varying vec3 vN; void main(){ float i = pow(max(0.0, 0.72 - dot(vN, vec3(0.0, 0.0, 1.0))), p); gl_FragColor = vec4(c, 1.0) * i; }',
+    blending: THREE.AdditiveBlending, side: THREE.BackSide, transparent: true, depthWrite: false
+  });
+}
+
+/* ── Le Soleil : granulation + quelques taches solaires ── */
+function texSoleil() {
+  const rnd = mulberry32(41);
+  const fa = makeFbm(41,4,8,4), fb = makeFbm(42,4,36,18);
+  const pal = ramp([[0,120,20,0],[0.35,205,70,0],[0.6,255,140,10],[0.8,255,205,90],[1,255,246,190]]);
+  const res = paintPixels(1024, 512, function (u, v, px) {
+    const col = pal(clamp01((fa(u,v)*0.55 + fb(u,v)*0.45 - 0.47) * 1.8 + 0.5));
+    px[0]=col[0]; px[1]=col[1]; px[2]=col[2];
+  });
+  const ctx = res.ctx;
+  for (let i = 0; i < 3; i++) {
+    const x = rnd()*1024, y = 512*(0.35 + rnd()*0.3), r = 5 + rnd()*8;
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, 'rgba(40,8,0,0.65)');
+    g.addColorStop(1, 'rgba(40,8,0,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fill();
+  }
+  return toTex(res.c);
+}
+
+/* ── Textures des lunes de Jupiter ── */
+function texIo() {
+  const rnd = mulberry32(51);
+  const f = makeFbm(51,4,8,4);
+  const pal = ramp([[0,122,86,22],[0.5,198,162,58],[0.8,230,210,122],[1,246,238,192]]);
+  const res = paintPixels(256, 128, function (u, v, px) {
+    const col = pal(clamp01((f(u, v) - 0.47) * 1.7 + 0.5));
+    px[0]=col[0]; px[1]=col[1]; px[2]=col[2];
+  });
+  const ctx = res.ctx;
+  for (let i = 0; i < 9; i++) {                       // taches volcaniques
+    const x = rnd()*256, y = 128*(0.15 + rnd()*0.7), r = 3 + rnd()*7;
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, 'rgba(60,25,5,0.7)');
+    g.addColorStop(1, 'rgba(60,25,5,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fill();
+  }
+  return toTex(res.c);
+}
+
+function texEurope() {
+  const rnd = mulberry32(53);
+  const f = makeFbm(53,4,6,3);
+  const res = paintPixels(256, 128, function (u, v, px) {
+    const l = 0.9 + (f(u,v)-0.5)*0.14;
+    px[0]=224*l; px[1]=216*l; px[2]=200*l;
+  });
+  const ctx = res.ctx;                                // les fameuses craquelures
+  ctx.strokeStyle = 'rgba(150,88,58,0.55)'; ctx.lineWidth = 1;
+  for (let i = 0; i < 16; i++) {
+    let x = rnd()*256, y = rnd()*128;
+    ctx.beginPath(); ctx.moveTo(x, y);
+    for (let s = 0; s < 5; s++) { x += (rnd()-0.3)*60; y += (rnd()-0.5)*30; ctx.lineTo(x, y); }
+    ctx.stroke();
+  }
+  return toTex(res.c);
+}
+
+function texGrise(seed, base) {
+  const rnd = mulberry32(seed);
+  const f = makeFbm(seed,4,8,4);
+  const res = paintPixels(256, 128, function (u, v, px) {
+    const l = 0.55 + f(u,v)*0.9;
+    px[0]=base[0]*l; px[1]=base[1]*l; px[2]=base[2]*l;
+  });
+  drawCraters(res.ctx, 256, 128, rnd, 55, 1.5, 7, 0.85);
+  return toTex(res.c);
+}
+
+/* ── Anneaux de Saturne : bandes concentriques + divisions ── */
+function texAnneaux() {
+  const fr = makeFbm(61,4,24,2);
+  const gaps = [0.30, 0.44, 0.52, 0.76, 0.84];
+  const c = document.createElement('canvas'); c.width = 512; c.height = 8;
+  const ctx = c.getContext('2d');
+  const img = ctx.createImageData(512, 8), d = img.data;
+  for (let x = 0; x < 512; x++) {
+    const t = x/511;
+    let a = 0.32 + 0.68*fr(t, 0.5);
+    a *= smooth(0, 0.05, t);                          // fondu au bord intérieur
+    a *= 1 - smooth(0.955, 1, t);                     // fondu au bord extérieur
+    const cass = smooth(0.60, 0.615, t) * (1 - smooth(0.655, 0.67, t));
+    a *= 1 - 0.93*cass;                               // division de Cassini
+    if (Math.abs(t-0.88) < 0.006) a *= 0.15;          // division d'Encke
+    for (let gi = 0; gi < gaps.length; gi++) if (Math.abs(t-gaps[gi]) < 0.004) a *= 0.35;
+    const m = 0.9 + 0.2*fr(t+0.31, 0.5);
+    const r = (168 + 64*t)*m, g = (150 + 66*t)*m, b = (120 + 62*t)*m;
+    for (let y = 0; y < 8; y++) {
+      const i = (y*512 + x)*4;
+      d[i]=r; d[i+1]=g; d[i+2]=b; d[i+3]=a*255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  return toTex(c);
+}
+
+/* ── Le ciel : Voie lactée + étoiles lointaines "imprimées" ── */
+function texCiel() {
+  const rnd = mulberry32(71);
+  const fs = makeFbm(71,5,10,5), fd = makeFbm(72,4,22,11);
+  const W = 1024, H = 512;
+  const res = paintPixels(W, H, function (u, v, px) {
+    const e = smooth(0, 1, Math.abs(2*v - 1));
+    let r = 6 - 4*e, g = 9 - 5*e, b = 26 - 12*e;
+    const cV = 0.5 + 0.16*Math.sin(u*6.2832 + 2.1) + 0.045*Math.sin(u*12.566 + 0.8);
+    const dv = v - cV;
+    const band = Math.exp(-(dv*dv)/(2*0.065*0.065));  // la bande laiteuse
+    const glow = band * (0.3 + 0.7*fs(u,v));
+    r += 120*glow; g += 135*glow; b += 165*glow;
+    const core = Math.pow(band, 3) * fs(u,v);         // coeur chaud
+    r += 90*core; g += 70*core; b += 40*core;
+    const dk = smooth(0.55, 0.85, fd(u,v)) * band;    // nuages de poussière
+    const m = 1 - 0.45*dk;
+    px[0]=Math.min(255, r*m); px[1]=Math.min(255, g*m); px[2]=Math.min(255, b*m);
+  });
+  const ctx = res.ctx;
+  for (let i = 0; i < 1800; i++) {
+    const u = rnd();
+    let v;
+    if (rnd() < 0.35) {                               // plus d'étoiles dans la bande
+      const cV = 0.5 + 0.16*Math.sin(u*6.2832 + 2.1) + 0.045*Math.sin(u*12.566 + 0.8);
+      v = clamp01(cV + (rnd()+rnd()+rnd()-1.5)*0.08);
+    } else v = rnd();
+    const s = rnd() < 0.04 ? 2 : 1;
+    ctx.fillStyle = 'rgba(255,255,255,' + (0.18 + rnd()*0.6).toFixed(2) + ')';
+    ctx.fillRect(u*W, v*H, s, s);
+  }
+  return toTex(res.c);
+}
+
+/* ── Petits utilitaires visuels ── */
+function makeGlowSprite(size, stops) {
+  const c = document.createElement('canvas'); c.width = 128; c.height = 128;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(64, 64, 4, 64, 64, 64);
+  for (let i = 0; i < stops.length; i++) g.addColorStop(stops[i][0], stops[i][1]);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, 128, 128);
+  const spr = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+  }));
+  spr.scale.set(size, size, 1);
+  return spr;
+}
+
+function makeLabel(text) {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 128;
+  const ctx = c.getContext('2d');
+  ctx.font = '600 58px Fredoka, "Trebuchet MS", sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 14;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(text, 256, 66);
+  const spr = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false
+  }));
+  spr.scale.set(7.6, 1.9, 1);
+  return spr;
+}
+
+/* ───────────────────── 4. CONSTRUCTION DU MONDE ───────────────────── */
+const bodies = {};        // id -> { info, follow, dist }
+const pickables = [];     // objets cliquables (raycasting)
+const labels = [];        // { spr, ref, off }
+const orbitLines = [];
+const belts = [];
+let sun, glow1, glow2, kuiper, earthClouds = null;
+
+/* Position sur l'orbite (incl = orbite penchée, pour Pluton) */
+function orbitPos(angle, dist, incl, out) {
+  const x = Math.cos(angle) * dist, z = Math.sin(angle) * dist;
+  if (incl) out.set(x, z * Math.sin(incl), z * Math.cos(incl));
+  else out.set(x, 0, z);
+}
+
+function registerBody(id, info, follow, dist, mesh) {
+  bodies[id] = { info: info, follow: follow, dist: dist };
+  if (mesh) { mesh.userData.bodyId = id; pickables.push(mesh); }
+}
+
+function addLabel(text, ref, off) {
+  const spr = makeLabel(text);
+  scene.add(spr);
+  labels.push({ spr: spr, ref: ref, off: off });
+}
+
+function buildSky() {
+  scene.add(new THREE.Mesh(
+    new THREE.SphereGeometry(560, 48, 32),
+    new THREE.MeshBasicMaterial({ map: texCiel(), side: THREE.BackSide })
+  ));
+  // étoiles proches en 3 tailles, légèrement teintées
+  const rnd = mulberry32(77);
+  const tints = [[1,1,1],[0.78,0.86,1],[1,0.9,0.76]];
+  const layers = [[1600,0.7],[700,1.4],[220,2.4]];
+  for (let li = 0; li < layers.length; li++) {
+    const n = layers[li][0];
+    const pos = new Float32Array(n*3), col = new Float32Array(n*3);
+    for (let i = 0; i < n; i++) {
+      const r = 320 + rnd()*200, a = rnd()*6.2832, b = Math.acos(rnd()*2 - 1);
+      pos[i*3]   = r * Math.sin(b) * Math.cos(a);
+      pos[i*3+1] = r * Math.cos(b);
+      pos[i*3+2] = r * Math.sin(b) * Math.sin(a);
+      const t = tints[rnd() < 0.7 ? 0 : (rnd() < 0.6 ? 1 : 2)];
+      col[i*3]=t[0]; col[i*3+1]=t[1]; col[i*3+2]=t[2];
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    scene.add(new THREE.Points(geo, new THREE.PointsMaterial({
+      size: layers[li][1], vertexColors: true, sizeAttenuation: true,
+      transparent: true, opacity: 0.95, depthWrite: false
+    })));
+  }
+}
+
+function buildSun() {
+  sun = new THREE.Mesh(new THREE.SphereGeometry(6, 48, 32), new THREE.MeshBasicMaterial({ map: texSoleil() }));
+  scene.add(sun);
+  glow1 = makeGlowSprite(24, [[0,'rgba(255,220,130,0.85)'],[0.35,'rgba(255,170,60,0.32)'],[1,'rgba(255,140,40,0)']]);
+  glow2 = makeGlowSprite(13, [[0,'rgba(255,246,210,0.95)'],[0.5,'rgba(255,200,90,0.4)'],[1,'rgba(255,180,60,0)']]);
+  scene.add(glow1); scene.add(glow2);
+  registerBody('soleil', SUN_INFO, sun, 40, sun);
+}
+
+/* uv de l'anneau : la texture s'étale du bord intérieur au bord extérieur */
+function remapRingUV(geo, inner, outer) {
+  const pos = geo.attributes.position, uv = geo.attributes.uv;
+  const v3 = new THREE.Vector3();
+  for (let i = 0; i < pos.count; i++) {
+    v3.fromBufferAttribute(pos, i);
+    uv.setXY(i, (v3.length() - inner) / (outer - inner), 0.5);
+  }
+}
+
+function planetMaterial(p) {
+  let t;
+  switch (p.tex) {
+    case 'mercure':
+      t = texMercure();
+      return new THREE.MeshPhongMaterial({ map: t, bumpMap: t, bumpScale: 0.05*p.size, shininess: 6, specular: 0x222222 });
+    case 'venus':
+      return new THREE.MeshPhongMaterial({ map: texVenus(), shininess: 12, specular: 0x332211 });
+    case 'terre': {
+      const e = texTerre();
+      return new THREE.MeshPhongMaterial({ map: e.map, specularMap: e.spec, specular: 0x99b3cc, shininess: 26 });
+    }
+    case 'mars':
+      t = texMars();
+      return new THREE.MeshPhongMaterial({ map: t, bumpMap: t, bumpScale: 0.05*p.size, shininess: 6, specular: 0x221510 });
+    case 'jupiter':
+      return new THREE.MeshLambertMaterial({ map: texGeante(101,
+        [[201,164,124],[164,112,80],[236,222,200],[186,142,102],[222,196,164],[142,94,70],[210,180,146]],
+        { warp: 0.055, fine: 0.16, spot: { u:0.72, v:0.62, rx:0.075, ry:0.045,
+          pal: ramp([[0,150,40,20],[0.35,196,70,32],[0.7,226,120,70],[1,242,196,158]]) } }) });
+    case 'saturne':
+      return new THREE.MeshLambertMaterial({ map: texGeante(103,
+        [[216,192,150],[196,170,128],[228,208,170],[206,182,142],[188,162,122],[222,200,162]],
+        { warp: 0.02, fine: 0.09, spot: null }) });
+    case 'uranus':
+      return new THREE.MeshLambertMaterial({ map: texUranus() });
+    case 'neptune':
+      return new THREE.MeshLambertMaterial({ map: texNeptune() });
+    case 'pluton':
+      t = texPluton();
+      return new THREE.MeshPhongMaterial({ map: t, bumpMap: t, bumpScale: 0.06*p.size, shininess: 8, specular: 0x223344 });
+  }
+}
+
+function buildPlanets() {
+  const startRnd = mulberry32(5);
+  PLANETS.forEach(function (p) {
+    const seg = p.size > 3 ? 64 : 48, seg2 = p.size > 3 ? 40 : 32;
+    const mesh = new THREE.Mesh(new THREE.SphereGeometry(p.size, seg, seg2), planetMaterial(p));
+    const pivot = new THREE.Object3D();
+    pivot.rotation.z = p.tilt;          // inclinaison de l'axe
+    pivot.add(mesh);
+    scene.add(pivot);
+    p.mesh = mesh; p.pivot = pivot; p.angle = startRnd() * 6.2832;
+
+    if (p.id === 'terre') {
+      earthClouds = new THREE.Mesh(
+        new THREE.SphereGeometry(p.size*1.018, seg, seg2),
+        new THREE.MeshLambertMaterial({ map: texNuages(), transparent: true, depthWrite: false })
+      );
+      pivot.add(earthClouds);
+      pivot.add(new THREE.Mesh(new THREE.SphereGeometry(p.size*1.15, seg, seg2), atmoMaterial(0x6fb0ff, 3.4)));
+    }
+    if (p.id === 'venus') {
+      pivot.add(new THREE.Mesh(new THREE.SphereGeometry(p.size*1.1, seg, seg2), atmoMaterial(0xffdf9e, 4.6)));
+    }
+    if (p.ring === 'saturne') {
+      const geo = new THREE.RingGeometry(p.size*1.32, p.size*2.32, 128, 1);
+      remapRingUV(geo, p.size*1.32, p.size*2.32);
+      const ring = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
+        map: texAnneaux(), transparent: true, side: THREE.DoubleSide, depthWrite: false
+      }));
+      ring.rotation.x = Math.PI/2;
+      pivot.add(ring);
+    }
+    if (p.ring === 'uranus') {
+      const ring = new THREE.Mesh(new THREE.RingGeometry(p.size*1.5, p.size*1.72, 96),
+        new THREE.MeshBasicMaterial({ color: 0xcfe6ee, transparent: true, opacity: 0.35, side: THREE.DoubleSide, depthWrite: false }));
+      ring.rotation.x = Math.PI/2;
+      pivot.add(ring);
+    }
+
+    // ligne d'orbite (penchée pour Pluton)
+    const pts = [], tmp = new THREE.Vector3();
+    for (let i = 0; i < 160; i++) { orbitPos(i/160*6.2832, p.dist, p.incl, tmp); pts.push(tmp.clone()); }
+    const line = new THREE.LineLoop(
+      new THREE.BufferGeometry().setFromPoints(pts),
+      new THREE.LineBasicMaterial({ color: 0x5d6db2, transparent: true, opacity: 0.32 })
+    );
+    scene.add(line); orbitLines.push(line);
+
+    addLabel(p.name, pivot, p.size + 1.9);
+    registerBody(p.id, p, pivot, Math.max(9, p.size*6.5), mesh);
+  });
+}
+
+function moonTexture(kind) {
+  switch (kind) {
+    case 'lune': return texLune();
+    case 'io': return texIo();
+    case 'europe': return texEurope();
+    case 'ganymede': return texGrise(55, [176,162,142]);
+    case 'callisto': return texGrise(57, [128,120,112]);
+  }
+}
+
+function buildMoons() {
+  const byId = {};
+  PLANETS.forEach(function (p) { byId[p.id] = p; });
+  MOONS.forEach(function (m) {
+    const t = moonTexture(m.kind);
+    const mesh = new THREE.Mesh(
+      new THREE.SphereGeometry(m.size, 22, 16),
+      new THREE.MeshPhongMaterial({ map: t, bumpMap: t, bumpScale: 0.03, shininess: 5, specular: 0x181818 })
+    );
+    scene.add(mesh);
+    m.mesh = mesh; m.parentP = byId[m.parent]; m.angle = Math.random()*6.2832;
+    registerBody(m.id, m, mesh, Math.max(6, m.size*11), mesh);
+  });
+}
+
+/* Ceinture d'astéroïdes : 3 anneaux instanciés (rapides à afficher),
+   qui tournent à des vitesses différentes -> effet de profondeur */
+function buildBelt() {
+  const rnd = mulberry32(88);
+  function ringOf(count, r0, r1, speed) {
+    const geo = new THREE.DodecahedronGeometry(1, 0);
+    geo.computeBoundingSphere();
+    const im = new THREE.InstancedMesh(geo, new THREE.MeshLambertMaterial({ color: 0x9a8b7a }), count);
+    const M = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(),
+          s = new THREE.Vector3(), pv = new THREE.Vector3();
+    for (let i = 0; i < count; i++) {
+      const a = rnd()*6.2832, r = r0 + rnd()*(r1-r0), y = (rnd()+rnd()-1)*0.8;
+      pv.set(Math.cos(a)*r, y, Math.sin(a)*r);
+      e.set(rnd()*3.14, rnd()*3.14, rnd()*3.14); q.setFromEuler(e);
+      const sc = 0.05 + Math.pow(rnd(), 1.6)*0.16;
+      s.set(sc*(0.7+rnd()*0.6), sc, sc*(0.7+rnd()*0.6));
+      M.compose(pv, q, s);
+      im.setMatrixAt(i, M);
+    }
+    im.instanceMatrix.needsUpdate = true;
+    im.userData.beltSpeed = speed;
+    im.userData.bodyId = 'asteroides';
+    scene.add(im); belts.push(im); pickables.push(im);
+  }
+  ringOf(260, 36.4, 38.1, 0.050);
+  ringOf(260, 38.1, 39.8, 0.040);
+  ringOf(240, 39.8, 41.5, 0.032);
+  bodies['asteroides'] = { info: BELT_INFO, follow: null, dist: 120 };
+
+  // Ceinture de Kuiper : poussière glacée au-delà de Neptune
+  const n = 1400, pos = new Float32Array(n*3);
+  for (let i = 0; i < n; i++) {
+    const a = rnd()*6.2832, r = 96 + rnd()*26;
+    pos[i*3] = Math.cos(a)*r; pos[i*3+1] = (rnd()+rnd()-1)*3; pos[i*3+2] = Math.sin(a)*r;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  kuiper = new THREE.Points(geo, new THREE.PointsMaterial({
+    size: 0.55, color: 0x8fa8cc, transparent: true, opacity: 0.5, depthWrite: false
+  }));
+  scene.add(kuiper);
+}
+
+/* ── La comète : orbite très allongée + queue qui fuit le Soleil ── */
+const comet = { a: 52, e: 0.82, incl: 0.30, yaw: 2.4, th: 2.6, r: 50, pos: new THREE.Vector3() };
+let cometTail, cometComa, cometJit;
+
+function cometPoint(th, out) {
+  const r = comet.a * (1 - comet.e*comet.e) / (1 + comet.e*Math.cos(th));
+  const x = Math.cos(th)*r;
+  let z = Math.sin(th)*r;
+  const y = z * Math.sin(comet.incl);
+  z *= Math.cos(comet.incl);
+  const cy = Math.cos(comet.yaw), sy = Math.sin(comet.yaw);
+  out.set(x*cy + z*sy, y, -x*sy + z*cy);
+  return r;
+}
+
+function buildComet() {
+  comet.mesh = new THREE.Mesh(
+    new THREE.SphereGeometry(0.5, 14, 10),
+    new THREE.MeshPhongMaterial({ color: 0xdfeef8, emissive: 0x16222e, shininess: 30 })
+  );
+  scene.add(comet.mesh);
+  cometComa = makeGlowSprite(3, [[0,'rgba(210,235,255,0.9)'],[0.5,'rgba(150,200,255,0.35)'],[1,'rgba(120,180,255,0)']]);
+  scene.add(cometComa);
+
+  const N = 90;
+  const pos = new Float32Array(N*3), col = new Float32Array(N*3);
+  cometJit = new Float32Array(N*3);
+  for (let i = 0; i < N; i++) {
+    const b = Math.pow(1 - i/N, 1.6);       // la queue s'estompe
+    col[i*3] = b*0.75; col[i*3+1] = b*0.88; col[i*3+2] = b;
+    cometJit[i*3] = Math.random()*2-1; cometJit[i*3+1] = Math.random()*2-1; cometJit[i*3+2] = Math.random()*2-1;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  cometTail = new THREE.Points(geo, new THREE.PointsMaterial({
+    size: 0.9, vertexColors: true, transparent: true,
+    blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true
+  }));
+  scene.add(cometTail);
+
+  // trajectoire : ellipse penchée
+  const pts = [], tmp = new THREE.Vector3();
+  for (let i = 0; i < 240; i++) { cometPoint(i/240*6.2832, tmp); pts.push(tmp.clone()); }
+  const line = new THREE.LineLoop(
+    new THREE.BufferGeometry().setFromPoints(pts),
+    new THREE.LineBasicMaterial({ color: 0x7fa8ff, transparent: true, opacity: 0.22 })
+  );
+  scene.add(line); orbitLines.push(line);
+
+  comet.r = cometPoint(comet.th, comet.pos);
+  comet.mesh.position.copy(comet.pos);
+  cometComa.position.copy(comet.pos);
+  addLabel('Comète', comet.mesh, 1.5);
+  registerBody('comete', COMET_INFO, comet.mesh, 11, comet.mesh);
+}
+
+function updateComet(dt, mult) {
+  comet.th += 340/(comet.r*comet.r) * mult * dt;      // 2e loi de Kepler : + vite près du Soleil
+  comet.r = cometPoint(comet.th, comet.pos);
+  comet.mesh.position.copy(comet.pos);
+  cometComa.position.copy(comet.pos);
+  const s = Math.min(7, 1.6 + 40/comet.r);
+  cometComa.scale.set(s, s, 1);
+  const away = comet.pos.clone().normalize();         // la queue fuit toujours le Soleil
+  const len = Math.max(3, Math.min(30, 260/comet.r));
+  const spread = len*0.16;
+  const arr = cometTail.geometry.attributes.position.array;
+  const N = arr.length/3;
+  for (let i = 0; i < N; i++) {
+    const t = i/N;
+    arr[i*3]   = comet.pos.x + away.x*t*len + cometJit[i*3]  *spread*t;
+    arr[i*3+1] = comet.pos.y + away.y*t*len + cometJit[i*3+1]*spread*t;
+    arr[i*3+2] = comet.pos.z + away.z*t*len + cometJit[i*3+2]*spread*t;
+  }
+  cometTail.geometry.attributes.position.needsUpdate = true;
+  cometTail.material.opacity = Math.max(0.12, Math.min(1, 55/comet.r - 0.25));
+}
+
+/* ───────────────────── 5. INTERACTION ───────────────────── */
+let followTarget = null, currentId = null;
+let paused = false, speedMult = 1, labelsOn = true, showOrbits = true;
+let tourOn = false, tourIdx = -1, tourClock = 0;
+const TOUR = ['soleil','mercure','venus','terre','mars','jupiter','saturne','uranus','neptune','pluton','comete'];
+
+const card = document.getElementById('info-card');
+function showCard(info) {
+  document.getElementById('card-tag').textContent = info.tag || 'Planète';
+  document.getElementById('card-title').textContent = info.emoji + ' ' + info.name;
+  document.getElementById('card-stats').innerHTML = info.stats.map(function (s) {
+    return '<span class="stat">' + s + '</span>';
+  }).join('');
+  document.getElementById('card-fact').textContent = info.fact;
+  card.classList.add('visible');
+}
+function hideCard() { card.classList.remove('visible'); }
+document.getElementById('close-card').addEventListener('click', hideCard);
+
+function focusBody(id, fromTour) {
+  const b = bodies[id]; if (!b) return;
+  currentId = id;
+  followTarget = b.follow;
+  cam.distGoal = b.dist;
+  showCard(b.info);
+  setActiveChip(id);
+  hideHelp();
+  if (!fromTour) stopTour();
+}
+function goHome() {
+  currentId = null; followTarget = null;
+  cam.distGoal = 110;
+  hideCard(); setActiveChip(null); stopTour();
+}
+
+/* ── Dock : un bouton par astre ── */
+const dockEl = document.getElementById('dock');
+const chipRefs = {};
+function buildDock() {
+  const entries = [{ id:'soleil', emoji:'🌞', name:'Soleil' }];
+  PLANETS.forEach(function (p) { entries.push({ id: p.id, emoji: p.emoji, name: p.name }); });
+  entries.push({ id:'comete', emoji:'☄️', name:'Comète' });
+  entries.push({ id:'asteroides', emoji:'💫', name:'Astéroïdes' });
+  entries.forEach(function (en) {
+    const b = document.createElement('button');
+    b.className = 'chip';
+    b.innerHTML = '<span>' + en.emoji + '</span>' + en.name;
+    b.addEventListener('click', function () { focusBody(en.id, false); });
+    dockEl.appendChild(b);
+    chipRefs[en.id] = b;
+  });
+}
+function setActiveChip(id) {
+  for (const k in chipRefs) chipRefs[k].classList.toggle('active', k === id);
+  if (id && chipRefs[id]) chipRefs[id].scrollIntoView({ inline:'center', block:'nearest', behavior:'smooth' });
+}
+
+/* ── Sélection au clic / au doigt (raycasting) ── */
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+function pickAt(x, y) {
+  pointer.x = (x / window.innerWidth) * 2 - 1;
+  pointer.y = -(y / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(pointer, camera);
+  const hits = raycaster.intersectObjects(pickables, false);
+  if (hits.length > 0) {
+    const id = hits[0].object.userData.bodyId;
+    if (id) focusBody(id, false);
+  }
+}
+
+/* ── Contrôles caméra : souris + tactile ── */
+let dragging = false, pressOnCanvas = false, lastX = 0, lastY = 0, downX = 0, downY = 0, pinchDist = 0;
+canvas.addEventListener('mousedown', function (e) {
+  pressOnCanvas = true; dragging = true;
+  lastX = downX = e.clientX; lastY = downY = e.clientY;
+});
+window.addEventListener('mousemove', function (e) {
+  if (!dragging) return;
+  cam.theta += (e.clientX - lastX) * 0.005;
+  cam.phi = Math.min(2.9, Math.max(0.2, cam.phi - (e.clientY - lastY) * 0.005));
+  lastX = e.clientX; lastY = e.clientY;
+});
+window.addEventListener('mouseup', function (e) {
+  if (pressOnCanvas && Math.hypot(e.clientX - downX, e.clientY - downY) < 6) pickAt(e.clientX, e.clientY);
+  dragging = false; pressOnCanvas = false;
+});
+canvas.addEventListener('wheel', function (e) {
+  cam.distGoal = Math.min(240, Math.max(10, cam.distGoal + e.deltaY * 0.06));
+}, { passive: true });
+
+canvas.addEventListener('touchstart', function (e) {
+  if (e.touches.length === 1) {
+    pressOnCanvas = true; dragging = true;
+    lastX = downX = e.touches[0].clientX; lastY = downY = e.touches[0].clientY;
+  } else if (e.touches.length === 2) {
+    dragging = false;
+    pinchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+  }
+}, { passive: true });
+canvas.addEventListener('touchmove', function (e) {
+  if (e.touches.length === 1 && dragging) {
+    cam.theta += (e.touches[0].clientX - lastX) * 0.006;
+    cam.phi = Math.min(2.9, Math.max(0.2, cam.phi - (e.touches[0].clientY - lastY) * 0.006));
+    lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
+  } else if (e.touches.length === 2) {
+    const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+    cam.distGoal = Math.min(240, Math.max(10, cam.distGoal + (pinchDist - d) * 0.14));
+    pinchDist = d;
+  }
+}, { passive: true });
+canvas.addEventListener('touchend', function (e) {
+  if (pressOnCanvas && dragging && e.changedTouches.length === 1) {
+    const t = e.changedTouches[0];
+    if (Math.hypot(t.clientX - downX, t.clientY - downY) < 10) pickAt(t.clientX, t.clientY);
+  }
+  dragging = false; pressOnCanvas = false;
+}, { passive: true });
+
+/* ── Boutons ── */
+document.getElementById('btn-pause').addEventListener('click', function () {
+  paused = !paused;
+  this.textContent = paused ? '▶️ Lecture' : '⏸ Pause';
+  this.classList.toggle('on', paused);
+});
+const SPEEDS = [1, 3, 10], SPEED_ICONS = ['🐢', '🐇', '🚀'];
+document.getElementById('btn-speed').addEventListener('click', function () {
+  const i = (SPEEDS.indexOf(speedMult) + 1) % SPEEDS.length;
+  speedMult = SPEEDS[i];
+  this.textContent = SPEED_ICONS[i] + ' Vitesse ×' + speedMult;
+});
+document.getElementById('btn-orbits').addEventListener('click', function () {
+  showOrbits = !showOrbits;
+  orbitLines.forEach(function (l) { l.visible = showOrbits; });
+  this.classList.toggle('on', showOrbits);
+  this.textContent = (showOrbits ? '🔵' : '⚪') + ' Orbites';
+});
+document.getElementById('btn-labels').addEventListener('click', function () {
+  labelsOn = !labelsOn;
+  this.classList.toggle('on', labelsOn);
+});
+const tourBtn = document.getElementById('btn-tour');
+tourBtn.addEventListener('click', function () {
+  if (tourOn) { stopTour(); }
+  else {
+    tourOn = true; tourIdx = -1; tourClock = 99;   // 99 -> première étape immédiate
+    tourBtn.textContent = '⏹ Stop visite';
+    tourBtn.classList.add('on');
+  }
+});
+function stopTour() {
+  if (!tourOn) return;
+  tourOn = false;
+  tourBtn.textContent = '✨ Visite guidée';
+  tourBtn.classList.remove('on');
+}
+document.getElementById('btn-home').addEventListener('click', goHome);
+
+const helpEl = document.getElementById('help');
+function hideHelp() { helpEl.classList.add('hidden'); }
+setTimeout(hideHelp, 12000);
+
+/* ───────────────────── 6. ANIMATION ─────────────────────
+   deltaTime : même vitesse quelle que soit la puissance de
+   l'appareil (comme dans Neural City). */
+let lastTime = performance.now();
+function animate(now) {
+  requestAnimationFrame(animate);
+  const dt = Math.min(0.05, (now - lastTime) / 1000);
+  lastTime = now;
+
+  if (!paused) {
+    for (let i = 0; i < PLANETS.length; i++) {
+      const p = PLANETS[i];
+      p.angle += p.speed * 0.15 * speedMult * dt;                 // révolution
+      orbitPos(p.angle, p.dist, p.incl, p.pivot.position);
+      p.mesh.rotation.y += p.spin * 3 * speedMult * dt;           // rotation
+    }
+    if (earthClouds) earthClouds.rotation.y += 0.05 * speedMult * dt;
+    sun.rotation.y += 0.05 * speedMult * dt;
+
+    for (let i = 0; i < MOONS.length; i++) {
+      const m = MOONS[i], c = m.parentP.pivot.position;
+      m.angle += m.speed * 0.5 * speedMult * dt;
+      m.mesh.position.set(
+        c.x + Math.cos(m.angle) * m.dist,
+        c.y + Math.sin(m.angle) * m.dist * 0.06,
+        c.z + Math.sin(m.angle) * m.dist
+      );
+      if (m.id === 'lune') m.mesh.rotation.y = -m.angle;          // toujours la même face !
+      else m.mesh.rotation.y += 0.3 * speedMult * dt;
+    }
+    for (let i = 0; i < belts.length; i++) belts[i].rotation.y += belts[i].userData.beltSpeed * speedMult * dt;
+    kuiper.rotation.y += 0.004 * speedMult * dt;
+    updateComet(dt, speedMult);
+  }
+
+  // le halo du Soleil "respire"
+  const tt = now * 0.001;
+  const s1 = 24 * (1 + 0.035 * Math.sin(tt * 2.1));
+  const s2 = 13 * (1 + 0.05 * Math.sin(tt * 3.3 + 1));
+  glow1.scale.set(s1, s1, 1);
+  glow2.scale.set(s2, s2, 1);
+
+  // étiquettes : suivent leur astre, s'effacent quand on s'approche
+  for (let i = 0; i < labels.length; i++) {
+    const L = labels[i], pos = L.ref.position;
+    L.spr.position.set(pos.x, pos.y + L.off, pos.z);
+    const d = camera.position.distanceTo(pos);
+    L.spr.material.opacity = labelsOn ? Math.min(1, Math.max(0, (d - L.off * 3.2) / 22)) : 0;
+  }
+
+  // visite guidée : étape suivante toutes les 8,5 s
+  if (tourOn) {
+    tourClock += dt;
+    if (tourClock >= 8.5) {
+      tourClock = 0;
+      tourIdx = (tourIdx + 1) % TOUR.length;
+      focusBody(TOUR[tourIdx], true);
+    }
+  }
+
+  // caméra : suivi et zoom lissés
+  cam.target.lerp(followTarget ? followTarget.position : ORIGIN, 0.08);
+  cam.dist += (cam.distGoal - cam.dist) * 0.1;
+  applyCamera();
+  renderer.render(scene, camera);
+}
+
+window.addEventListener('resize', function () {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+/* ───────────────────── 7. DÉMARRAGE ─────────────────────
+   On attend (0,9 s max) que la police soit chargée pour que les
+   étiquettes 3D soient dessinées avec la bonne écriture. */
+function boot() {
+  buildSky();
+  buildSun();
+  buildPlanets();
+  buildMoons();
+  buildBelt();
+  buildComet();
+  buildDock();
+  requestAnimationFrame(animate);
+  const lo = document.getElementById('loader');
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      lo.classList.add('done');
+      setTimeout(function () { lo.remove(); }, 700);
+    });
+  });
+}
+Promise.race([document.fonts.ready, new Promise(function (r) { setTimeout(r, 900); })]).then(boot);
+</script>
+</body>
+</html>

@@ -36,14 +36,29 @@ export default {
     imagePlaceholder: "Capture d'écran à venir",
     items: [
       {
-        title: "Carte interactive — géolocalisation",
-        description:
-          "Une carte interactive affichant des lieux géolocalisés avec des marqueurs cliquables, accompagnée d'un tableau dynamique des coordonnées (latitude/longitude, en degrés décimaux et DMS). Réalisée avec l'API Leaflet et les tuiles OpenStreetMap.",
-      },
-      {
         title: "Portfolio personnel",
         description:
           "Une maquette réalisée sur Figma, puis intégrée en un site entièrement responsive en HTML, CSS et JavaScript, et mise en ligne via FTP.",
+      },
+      {
+        title: "Système solaire 3D interactif",
+        description:
+          "Un système solaire entièrement interactif réalisé avec Three.js — le Soleil, les 8 planètes et Pluton, des lunes, une ceinture d'astéroïdes et une comète, avec des textures procédurales faites main (aucune image externe). Glisse pour tourner, molette pour zoomer, et touche un astre pour découvrir des infos sur lui.",
+      },
+      {
+        title: "NEURAL_CITY — exploration d'une ville cyberpunk",
+        description:
+          "Une ville cyberpunk générée en Three.js où chaque quartier représente un langage ou une techno — plus de 90 bâtiments placés à la main répartis en 4 zones, avec un mode de déplacement à pied en vue première/troisième personne et une interface façon HUD pour naviguer entre les secteurs.",
+      },
+      {
+        title: "B Network — page d'atterrissage d'un studio web",
+        description:
+          "Une landing page d'entraînement pour un studio web fictif, pensée pour travailler le design orienté conversion : tarification modulaire, parcours de paiement Stripe, et mise en page one-page sobre.",
+      },
+      {
+        title: "Carte interactive — géolocalisation",
+        description:
+          "Une carte interactive affichant des lieux géolocalisés avec des marqueurs cliquables, accompagnée d'un tableau dynamique des coordonnées (latitude/longitude, en degrés décimaux et DMS). Réalisée avec l'API Leaflet et les tuiles OpenStreetMap.",
       },
       {
         title: "Livre d'or dynamique",

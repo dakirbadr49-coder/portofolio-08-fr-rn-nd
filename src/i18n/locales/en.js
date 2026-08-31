@@ -36,14 +36,29 @@ export default {
     imagePlaceholder: 'Screenshot coming soon',
     items: [
       {
-        title: 'Interactive map — geolocation',
-        description:
-          'An interactive map displaying geolocated places with clickable markers, plus a dynamic coordinates table (latitude/longitude, in decimal degrees and DMS). Built with the Leaflet API and OpenStreetMap tiles.',
-      },
-      {
         title: 'Personal portfolio',
         description:
           'A mockup designed in Figma, then built into a fully responsive site with plain HTML, CSS and JavaScript, and deployed online via FTP.',
+      },
+      {
+        title: 'Interactive 3D solar system',
+        description:
+          "A fully interactive solar system built with Three.js — the Sun, all 8 planets plus Pluto, moons, an asteroid belt and a comet, with hand-crafted procedural textures (no external images). Drag to orbit, scroll to zoom, and tap any body for facts about it.",
+      },
+      {
+        title: 'NEURAL_CITY — cyberpunk city explorer',
+        description:
+          'A cyberpunk city generated in Three.js where each district represents a programming language or technology — over 90 hand-placed buildings across 4 zones, with a first/third-person walking mode and a sci-fi HUD to navigate sectors.',
+      },
+      {
+        title: 'B Network — web studio landing page',
+        description:
+          'A practice landing page for a fictional web studio, built to sharpen conversion-focused design: modular pricing, a Stripe checkout flow, and a clean one-page layout.',
+      },
+      {
+        title: 'Interactive map — geolocation',
+        description:
+          'An interactive map displaying geolocated places with clickable markers, plus a dynamic coordinates table (latitude/longitude, in decimal degrees and DMS). Built with the Leaflet API and OpenStreetMap tiles.',
       },
       {
         title: 'Dynamic guestbook',
