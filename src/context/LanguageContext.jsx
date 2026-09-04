@@ -2,24 +2,18 @@ import { createContext, useContext, useMemo, useState } from 'react'
 import { defaultLanguage, locales, supportedLanguages } from '../i18n/locales/index.js'
 
 const LanguageContext = createContext(null)
-const STORAGE_KEY = 'portfolio-language'
-
-function getInitialLanguage() {
-  const stored = localStorage.getItem(STORAGE_KEY)
-  if (stored && supportedLanguages.includes(stored)) return stored
-  return defaultLanguage
-}
 
 function readPath(obj, path) {
   return path.split('.').reduce((acc, key) => (acc && acc[key] !== undefined ? acc[key] : undefined), obj)
 }
 
 export function LanguageProvider({ children }) {
-  const [language, setLanguageState] = useState(getInitialLanguage)
+  // Always start in the default language (English) — the site should never
+  // reopen in a previously chosen language on a fresh visit/refresh.
+  const [language, setLanguageState] = useState(defaultLanguage)
 
   const setLanguage = (lang) => {
     if (!supportedLanguages.includes(lang)) return
-    localStorage.setItem(STORAGE_KEY, lang)
     setLanguageState(lang)
   }
 
