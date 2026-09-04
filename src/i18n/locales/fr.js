@@ -17,6 +17,7 @@ export default {
     availability: "Disponible immédiatement pour un stage ou un poste junior",
     ctaProjects: "Voir mes projets",
     ctaContact: "Me contacter",
+    ctaCv: "Télécharger mon CV",
   },
   about: {
     eyebrow: "À propos de moi",

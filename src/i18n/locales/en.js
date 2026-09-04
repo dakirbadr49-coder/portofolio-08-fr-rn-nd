@@ -17,6 +17,7 @@ export default {
     availability: 'Available immediately for an internship or a junior position',
     ctaProjects: 'View my projects',
     ctaContact: 'Get in touch',
+    ctaCv: 'Download my CV',
   },
   about: {
     eyebrow: 'About me',

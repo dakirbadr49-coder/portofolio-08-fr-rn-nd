@@ -17,6 +17,7 @@ export default {
     availability: "Onmiddellijk beschikbaar voor een stage of een junior functie",
     ctaProjects: "Bekijk mijn projecten",
     ctaContact: "Neem contact op",
+    ctaCv: "Download mijn cv",
   },
   about: {
     eyebrow: "Over mij",

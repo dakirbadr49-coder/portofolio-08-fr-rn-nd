@@ -1,8 +1,15 @@
 import { useLanguage } from '../context/LanguageContext.jsx'
 import './Hero.css'
 
+const CV_FILES = {
+  fr: '/cv/Badr_Dakir_CV_FR.pdf',
+  en: '/cv/Badr_Dakir_CV_EN.pdf',
+  nl: '/cv/Badr_Dakir_CV_FR.pdf',
+}
+
 export default function Hero() {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
+  const cvHref = CV_FILES[language] || CV_FILES.fr
 
   return (
     <section id="hero" className="hero">
@@ -23,6 +30,9 @@ export default function Hero() {
           </a>
           <a href="#contact" className="btn btn-outline">
             {t('hero.ctaContact')}
+          </a>
+          <a href={cvHref} className="btn btn-outline" download>
+            {t('hero.ctaCv')}
           </a>
         </div>
       </div>
