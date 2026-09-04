@@ -4,7 +4,7 @@ import './Hero.css'
 const CV_FILES = {
   fr: '/cv/Badr_Dakir_CV_FR.pdf',
   en: '/cv/Badr_Dakir_CV_EN.pdf',
-  nl: '/cv/Badr_Dakir_CV_FR.pdf',
+  nl: '/cv/Badr_Dakir_CV_NL.pdf',
 }
 
 export default function Hero() {

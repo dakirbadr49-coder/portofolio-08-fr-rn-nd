@@ -44,7 +44,22 @@ export default function LocationMap() {
 
     mapRef.current = map
 
+    // Leaflet mis-renders tiles when its container size isn't settled at init
+    // time (e.g. loaded scrolled down); force a resize check once it's visible.
+    const resizeObserver = new ResizeObserver(() => map.invalidateSize())
+    resizeObserver.observe(containerRef.current)
+
+    let observer
+    if ('IntersectionObserver' in window) {
+      observer = new IntersectionObserver((entries) => {
+        if (entries[0]?.isIntersecting) map.invalidateSize()
+      })
+      observer.observe(containerRef.current)
+    }
+
     return () => {
+      resizeObserver.disconnect()
+      observer?.disconnect()
       map.remove()
       mapRef.current = null
       markerRef.current = null
